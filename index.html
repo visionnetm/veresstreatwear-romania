@@ -17,10 +17,9 @@
         .slide-menu-right { transform: translateX(100%); }
         
         .slide-up { animation: slideUp 0.3s ease-in-out forwards; }
-        
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-        /* Gördítősáv elrejtése - de görgethető marad */
+        /* Gördítősáv elrejtése, de görgethető marad */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -94,7 +93,7 @@
         </div>
     </div>
 
-    <div id="product-modal" class="fixed inset-0 z-[60] hidden bg-white flex-col h-[100dvh]">
+    <div id="product-modal" class="fixed inset-0 z-[60] hidden bg-white flex-col">
         <div class="flex-shrink-0 flex justify-between items-center p-4 border-b border-gray-200 bg-white z-10">
             <button onclick="closeProductModal()" class="text-gray-900 p-2 -ml-2 text-xl"><i class="fas fa-times"></i></button>
             <span class="text-xs font-bold tracking-widest uppercase">Termék részletei</span>
@@ -103,13 +102,12 @@
             </button>
         </div>
         
-        <div class="flex-grow overflow-y-auto no-scrollbar bg-white relative pb-32">
+        <div class="flex-grow overflow-y-auto no-scrollbar bg-white pb-32">
             <div class="w-full bg-gray-100 aspect-[4/5] relative">
                 <img id="modal-main-img" src="" class="w-full h-full object-cover">
             </div>
             
-            <div class="flex gap-2 p-4" id="modal-thumbnails">
-                </div>
+            <div class="flex gap-2 p-4" id="modal-thumbnails"></div>
 
             <div class="px-4">
                 <div class="flex justify-between items-start mb-2">
@@ -130,8 +128,7 @@
                         <h3 class="text-xs font-bold uppercase tracking-widest">Méret kiválasztása</h3>
                         <span class="text-[10px] text-gray-500 underline cursor-pointer">Mérettáblázat</span>
                     </div>
-                    <div class="grid grid-cols-3 gap-2" id="modal-sizes">
-                        </div>
+                    <div class="grid grid-cols-3 gap-2" id="modal-sizes"></div>
                     <p id="size-error" class="text-red-500 text-xs mt-2 hidden font-medium">Kérlek, válassz méretet!</p>
                 </div>
                 
@@ -209,4 +206,267 @@
     </footer>
 
     <script>
-        // --- TERMÉK ADATBÁZ
+        const productsDB = [
+            {
+                id: 1,
+                name: 'Heavy Hoodie',
+                price: 399,
+                variant: 'Black / Grey',
+                category: 'Oversized',
+                description: '100% organikus nehéz pamut (450 GSM), masszív és tartós. Oversize szabás, ejtett vállakkal a tökéletes streetwear sziluett eléréséhez. Mosógépben 30 fokon mosható.',
+                badge: 'Bestseller',
+                images: [
+                    'https://images.unsplash.com/photo-1556821840-3a63f95609a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1556821832-78a0b01c3857?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1556821844-3151f1580521?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'
+                ],
+                sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+            },
+            {
+                id: 2,
+                name: 'Panel Hoodie',
+                price: 429,
+                variant: 'Bone',
+                category: 'Oversized',
+                description: 'Kétféle textúrájú anyagból készült hibrid hoodie, aszimmetrikus varrásokkal. Vastag kapucni, fém végű húzózsinórokkal, limitált európai gyártás.',
+                badge: '',
+                images: [
+                    'https://images.unsplash.com/photo-1572495641004-28421ae52e52?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'
+                ],
+                sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+            },
+            {
+                id: 3,
+                name: 'Wide Pants',
+                price: 349,
+                variant: 'Black',
+                category: 'Wide Leg',
+                description: 'Bő szárú, kényelmes nadrág erős pamut-twill anyagból. Elasztikus derékrésszel és rejtett zsinórral, mindennapos viselethez optimalizálva.',
+                badge: 'Új',
+                images: [
+                    'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1584865288642-42078afe6942?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1604176354204-9268737828e4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'
+                ],
+                sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+            },
+            {
+                id: 4,
+                name: 'Tech Pants',
+                price: 379,
+                variant: 'Grey',
+                category: 'Tapered',
+                description: 'Technikai nadrág vízlepergető bevonattal. Több funkcionális cipzáras zsebbel és szűkülő bokarésszel az aktív napokra.',
+                badge: '',
+                images: [
+                    'https://images.unsplash.com/photo-1584865288642-42078afe6942?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1604176354204-9268737828e4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'
+                ],
+                sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+            }
+        ];
+
+        // Termékek betöltése az oldal indulásakor
+        document.addEventListener("DOMContentLoaded", () => {
+            const productGrid = document.getElementById('product-grid');
+            if (productGrid) {
+                productGrid.innerHTML = '';
+                productsDB.forEach(product => {
+                    const badgeHTML = product.badge ? `<div class="absolute top-2 left-2 bg-black text-white text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">${product.badge}</div>` : '';
+                    
+                    productGrid.innerHTML += `
+                        <div class="relative flex flex-col group cursor-pointer" onclick="openProductModal(${product.id})">
+                            <div class="relative bg-gray-200 aspect-[3/4] rounded-xl overflow-hidden mb-2">
+                                <img src="${product.images[0]}" class="w-full h-full object-cover">
+                                ${badgeHTML}
+                                <button class="absolute top-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md z-10" onclick="event.stopPropagation(); alert('Kedvencekhez adva!')">
+                                    <i class="far fa-heart text-xs text-gray-800"></i>
+                                </button>
+                            </div>
+                            <p class="text-[9px] text-gray-500 uppercase tracking-widest mt-1">${product.category}</p>
+                            <h4 class="text-sm font-bold leading-tight">${product.name}</h4>
+                            <div class="flex justify-between items-center mt-1">
+                                <p class="text-[11px] text-gray-500">${product.variant}</p>
+                                <p class="text-sm font-bold">${product.price} RON</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        });
+
+        // Menü logika
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            const panel = document.getElementById('menu-panel');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                setTimeout(() => panel.classList.add('open'), 10);
+                document.body.style.overflow = 'hidden';
+            } else {
+                panel.classList.remove('open');
+                setTimeout(() => { menu.classList.add('hidden'); document.body.style.overflow = ''; }, 300);
+            }
+        }
+
+        // Termék adatlap kezelése
+        const modal = document.getElementById('product-modal');
+        let currentActiveProduct = null;
+        let selectedSize = null;
+
+        function openProductModal(id) {
+            currentActiveProduct = productsDB.find(p => p.id === id);
+            selectedSize = null;
+            document.getElementById('size-error').classList.add('hidden');
+
+            document.getElementById('modal-main-img').src = currentActiveProduct.images[0];
+            document.getElementById('modal-name').innerText = currentActiveProduct.name;
+            document.getElementById('modal-price').innerText = currentActiveProduct.price + ' RON';
+            document.getElementById('modal-category').innerText = currentActiveProduct.category + ' · ' + currentActiveProduct.variant;
+            document.getElementById('modal-description').innerText = currentActiveProduct.description;
+
+            const thumbnailsContainer = document.getElementById('modal-thumbnails');
+            thumbnailsContainer.innerHTML = '';
+            currentActiveProduct.images.forEach(imgSrc => {
+                thumbnailsContainer.innerHTML += `
+                    <div class="w-1/3 aspect-[3/4] rounded-lg overflow-hidden cursor-pointer border border-transparent hover:border-black transition" onclick="changeModalImage('${imgSrc}')">
+                        <img src="${imgSrc}" class="w-full h-full object-cover">
+                    </div>
+                `;
+            });
+
+            const sizesContainer = document.getElementById('modal-sizes');
+            sizesContainer.innerHTML = '';
+            currentActiveProduct.sizes.forEach(size => {
+                sizesContainer.innerHTML += `
+                    <button onclick="selectSize('${size}', this)" class="size-btn py-3 border border-gray-300 rounded-lg text-xs font-bold uppercase transition hover:border-black">
+                        ${size}
+                    </button>
+                `;
+            });
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.classList.add('slide-up');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeProductModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.classList.remove('slide-up');
+            document.body.style.overflow = '';
+        }
+
+        function changeModalImage(src) {
+            document.getElementById('modal-main-img').src = src;
+        }
+
+        function selectSize(size, buttonElement) {
+            selectedSize = size;
+            document.getElementById('size-error').classList.add('hidden');
+            
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.classList.remove('bg-black', 'text-white', 'border-black');
+                btn.classList.add('border-gray-300', 'text-black', 'bg-white');
+            });
+            buttonElement.classList.remove('border-gray-300', 'bg-white', 'text-black');
+            buttonElement.classList.add('bg-black', 'text-white', 'border-black');
+        }
+
+        // Kosár logika
+        let cart = [];
+
+        function toggleCart() {
+            const cMenu = document.getElementById('cart-menu');
+            const cPanel = document.getElementById('cart-panel');
+            if (cMenu.classList.contains('hidden')) {
+                cMenu.classList.remove('hidden');
+                setTimeout(() => cPanel.classList.add('open'), 10);
+                document.body.style.overflow = 'hidden';
+            } else {
+                cPanel.classList.remove('open');
+                setTimeout(() => { cMenu.classList.add('hidden'); if(modal.classList.contains('hidden')) document.body.style.overflow = ''; }, 300);
+            }
+        }
+
+        function addCurrentProductToCart() {
+            if (!selectedSize) {
+                document.getElementById('size-error').classList.remove('hidden');
+                return;
+            }
+
+            const cartItemId = currentActiveProduct.id + '-' + selectedSize;
+            const existingItem = cart.find(item => item.cartId === cartItemId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ 
+                    ...currentActiveProduct, 
+                    cartId: cartItemId,
+                    selectedSize: selectedSize, 
+                    quantity: 1 
+                });
+            }
+            
+            updateCartUI();
+            closeProductModal();
+            toggleCart();
+        }
+
+        function removeFromCart(cartId) {
+            cart = cart.filter(item => item.cartId !== cartId);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            let total = 0;
+            let count = 0;
+
+            if (cart.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 text-sm mt-10">A kosarad jelenleg üres.</p>';
+            } else {
+                cart.forEach(item => {
+                    total += item.price * item.quantity;
+                    count += item.quantity;
+
+                    container.innerHTML += `
+                        <div class="flex gap-4 items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm cursor-pointer hover:border-gray-300 transition" onclick="openProductModal(${item.id})">
+                            <img src="${item.images[0]}" class="w-16 h-20 object-cover rounded-md bg-gray-100">
+                            <div class="flex-grow">
+                                <h4 class="text-sm font-bold leading-tight">${item.name}</h4>
+                                <p class="text-[10px] text-gray-500 uppercase mt-0.5">Méret: <span class="font-bold text-black">${item.selectedSize}</span></p>
+                                <p class="text-sm font-bold mt-1">${item.price} RON <span class="text-xs font-normal text-gray-400">x ${item.quantity}</span></p>
+                            </div>
+                            <button onclick="event.stopPropagation(); removeFromCart('${item.cartId}')" class="text-gray-300 hover:text-red-500 p-2">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('cart-total').innerText = `${total} RON`;
+            
+            const countEl = document.getElementById('cart-count');
+            if (count > 0) {
+                countEl.innerText = count;
+                countEl.classList.remove('hidden');
+            } else {
+                countEl.classList.add('hidden');
+            }
+        }
+
+        function checkout() {
+            if (cart.length === 0) alert('A kosarad üres!');
+            else alert('Továbbítás a fizetéshez...');
+        }
+    </script>
+</body>
+</html>
