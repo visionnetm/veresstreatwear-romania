@@ -12,13 +12,19 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #faf9f8; overflow-x: hidden; }
         
-        /* Menü és Kosár animációk */
+        /* Animációk */
         .slide-menu { transition: transform 0.3s ease-in-out; }
         .slide-menu.open { transform: translateX(0); }
         .slide-menu-left { transform: translateX(-100%); }
         .slide-menu-right { transform: translateX(100%); }
         
-        /* Gördítősáv elrejtése a menükben, de görgethető maradjon */
+        .fade-in { animation: fadeIn 0.3s ease-in-out forwards; }
+        .slide-up { animation: slideUp 0.3s ease-in-out forwards; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        /* Gördítősáv elrejtése */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -36,27 +42,23 @@
             <i class="fas fa-bars text-xl"></i>
         </button>
         
-        <!-- Logó helye -->
+        <!-- Logó helye (Frissítve VERESS STREETWEAR-re) -->
         <a href="#" class="flex-grow flex justify-center">
-            <!-- Cseréld ki a src="logo.png" részt a saját fájlod nevére, ha más lenne -->
-            <img src="logo.png" alt="VERESS STREETWEAR" class="h-10 object-contain" onerror="this.onerror=null; this.outerHTML='<h1 class=\'text-xl font-bold tracking-widest uppercase\'>VERESS</h1>';">
+            <img src="logo.png" alt="VERESS STREETWEAR" class="h-10 object-contain" onerror="this.onerror=null; this.outerHTML='<h1 class=\'text-lg font-bold tracking-widest uppercase\'>VERESS STREETWEAR</h1>';">
         </a>
         
         <div class="flex gap-3 text-gray-900">
             <button class="p-2"><i class="fas fa-search text-lg"></i></button>
             <button onclick="toggleCart()" class="p-2 relative">
                 <i class="fas fa-shopping-bag text-lg"></i>
-                <!-- Kosár számláló -->
                 <span id="cart-count" class="absolute top-0 right-0 bg-black text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
             </button>
         </div>
     </header>
 
-    <!-- Kicsúsztatható Bal Menü (14. Kép alapján) -->
+    <!-- Kicsúsztatható Bal Menü -->
     <div id="side-menu" class="fixed inset-0 z-50 hidden">
-        <!-- Sötétítő háttér -->
         <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity" onclick="toggleMenu()"></div>
-        <!-- Menü panel -->
         <div id="menu-panel" class="absolute top-0 left-0 w-4/5 max-w-sm h-full bg-[#faf9f8] slide-menu slide-menu-left flex flex-col shadow-2xl">
             <div class="flex justify-between items-center p-4 border-b border-gray-200">
                 <span class="text-xs font-bold tracking-widest uppercase">Menü</span>
@@ -83,26 +85,78 @@
     <!-- Kicsúsztatható Jobb Kosár Panel -->
     <div id="cart-menu" class="fixed inset-0 z-50 hidden">
         <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity" onclick="toggleCart()"></div>
-        <div id="cart-panel" class="absolute top-0 right-0 w-full sm:w-96 h-full bg-white slide-menu slide-menu-right flex flex-col shadow-2xl">
-            <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-[#faf9f8]">
+        <div id="cart-panel" class="absolute top-0 right-0 w-full sm:w-96 h-full bg-[#faf9f8] slide-menu slide-menu-right flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-white">
                 <span class="text-xs font-bold tracking-widest uppercase">Kosarad</span>
                 <button onclick="toggleCart()" class="text-gray-500 hover:text-black p-2 text-xl">&times;</button>
             </div>
             <div id="cart-items" class="p-4 flex-grow overflow-y-auto no-scrollbar flex flex-col gap-4">
-                <!-- A JavaScript ide generálja a termékeket -->
                 <p id="empty-cart-msg" class="text-center text-gray-500 text-sm mt-10">A kosarad jelenleg üres.</p>
             </div>
-            <div class="p-4 border-t border-gray-200 bg-[#faf9f8]">
+            <div class="p-4 border-t border-gray-200 bg-white">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-sm font-bold uppercase tracking-wider">Összesen:</span>
-                    <span id="cart-total" class="text-lg font-bold">0 RON</span>
+                    <span id="cart-total" class="text-xl font-extrabold">0 RON</span>
                 </div>
                 <button onclick="checkout()" class="w-full bg-[#1a1a1a] text-white py-4 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-black transition">Tovább a fizetéshez</button>
             </div>
         </div>
     </div>
 
-    <!-- Hero Szekció (13. Kép alapján) -->
+    <!-- Részletes Termékoldal Modal (Képekkel és Méretekkel) -->
+    <div id="product-modal" class="fixed inset-0 z-[60] hidden bg-white flex-col">
+        <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
+            <button onclick="closeProductModal()" class="text-gray-900 p-2 -ml-2 text-xl"><i class="fas fa-times"></i></button>
+            <span class="text-xs font-bold tracking-widest uppercase">Termék részletei</span>
+            <button onclick="toggleCart(); closeProductModal();" class="text-gray-900 p-2 relative">
+                <i class="fas fa-shopping-bag"></i>
+            </button>
+        </div>
+        
+        <div class="flex-grow overflow-y-auto no-scrollbar pb-32">
+            <!-- Fő kép -->
+            <div class="w-full bg-gray-100 aspect-[4/5] relative">
+                <img id="modal-main-img" src="" class="w-full h-full object-cover">
+            </div>
+            
+            <!-- 3 Választható kis kép -->
+            <div class="flex gap-2 p-4" id="modal-thumbnails">
+                <!-- JS generálja -->
+            </div>
+
+            <!-- Termék adatok és méretválasztó -->
+            <div class="px-4">
+                <p id="modal-category" class="text-[10px] text-gray-500 uppercase tracking-widest mb-1"></p>
+                <div class="flex justify-between items-end mb-4">
+                    <h2 id="modal-name" class="text-2xl font-extrabold uppercase tracking-tight leading-none"></h2>
+                    <p id="modal-price" class="text-lg font-bold whitespace-nowrap"></p>
+                </div>
+                
+                <p class="text-sm text-gray-600 mb-6 font-light">100% organikus nehéz pamut, oversize szabás. Prémium anyaghasználat a mindennapokra tervezve.</p>
+                
+                <!-- Méretválasztó -->
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-bold uppercase tracking-widest">Méret kiválasztása</h3>
+                        <span class="text-[10px] text-gray-500 underline cursor-pointer">Mérettáblázat</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2" id="modal-sizes">
+                        <!-- JS generálja a 6 méretet -->
+                    </div>
+                    <p id="size-error" class="text-red-500 text-xs mt-2 hidden font-medium">Kérlek, válassz méretet!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rögzített Kosárba Gomb -->
+        <div class="absolute bottom-0 left-0 w-full p-4 bg-white border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
+            <button id="modal-add-btn" onclick="addCurrentProductToCart()" class="w-full bg-black text-white py-4 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition active:scale-95 shadow-xl">
+                Kosárba teszem
+            </button>
+        </div>
+    </div>
+
+    <!-- Hero Szekció -->
     <section class="relative h-[75vh] w-full bg-gray-300 flex flex-col justify-end p-6" 
              style="background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1556821840-3a63f95609a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80') center/cover;">
         <div class="text-white z-10 mb-4">
@@ -110,301 +164,319 @@
             <h2 class="text-5xl font-extrabold uppercase leading-[0.9] tracking-tighter mb-4">Built For<br>The City</h2>
             <p class="text-sm mb-8 max-w-[300px] text-gray-200 font-light leading-relaxed">Nehéz anyagok, monokróm paletta, limitált szériák. Európai streetwear, kompromisszumok nélkül.</p>
             <div class="flex gap-4">
-                <a href="#products" class="bg-black text-white px-8 py-3.5 rounded-full text-[11px] font-bold uppercase tracking-widest text-center hover:bg-gray-800 transition">Vásárlás</a>
-                <a href="#categories" class="bg-transparent border border-white text-white px-8 py-3.5 rounded-full text-[11px] font-bold uppercase tracking-widest text-center hover:bg-white hover:text-black transition">Outfitek</a>
+                <a href="#products" class="bg-black text-white px-8 py-3.5 rounded-full text-[11px] font-bold uppercase tracking-widest text-center">Vásárlás</a>
+                <a href="#categories" class="bg-transparent border border-white text-white px-8 py-3.5 rounded-full text-[11px] font-bold uppercase tracking-widest text-center">Outfitek</a>
             </div>
         </div>
     </section>
 
-    <!-- Kategóriák Szekció -->
-    <section id="categories" class="p-4 pt-10">
-        <div class="flex justify-between items-end mb-4">
-            <h3 class="text-xl font-bold uppercase tracking-tighter">Kategóriák</h3>
-            <a href="#" class="text-xs font-semibold uppercase tracking-wider flex items-center gap-1">Összes <i class="fas fa-arrow-right text-[10px]"></i></a>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-            <div class="relative bg-gradient-to-tr from-gray-500 to-gray-300 aspect-[3/4] rounded-xl overflow-hidden flex items-end p-3 cursor-pointer">
-                <span class="text-white font-bold tracking-widest uppercase text-sm z-10">T-Shirts</span>
-            </div>
-            <div class="relative bg-gradient-to-tr from-gray-600 to-gray-400 aspect-[3/4] rounded-xl overflow-hidden flex items-end p-3 cursor-pointer">
-                <span class="text-white font-bold tracking-widest uppercase text-sm z-10">Hoodies</span>
-            </div>
-            <div class="relative bg-gradient-to-tr from-gray-400 to-gray-200 aspect-[3/4] rounded-xl overflow-hidden flex items-end p-3 cursor-pointer">
-                <span class="text-white font-bold tracking-widest uppercase text-sm z-10 shadow-black">Shorts</span>
-            </div>
-            <div class="relative bg-gradient-to-tr from-gray-700 to-gray-500 aspect-[3/4] rounded-xl overflow-hidden flex items-end p-3 cursor-pointer">
-                <span class="text-white font-bold tracking-widest uppercase text-sm z-10">Long Pants</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- Termékek Szekció -->
-    <section id="products" class="p-4 pt-8">
+    <!-- Termékek Szekció (JavaScript generálja ide) -->
+    <section id="products" class="p-4 pt-10">
         <h3 class="text-xl font-bold uppercase tracking-tighter mb-4">Újdonságok</h3>
-        <div class="grid grid-cols-2 gap-x-3 gap-y-6">
-            
-            <!-- Termék 1 -->
-            <div class="relative flex flex-col group">
-                <div class="relative bg-gray-200 aspect-[3/4] rounded-xl overflow-hidden mb-2">
-                    <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Heavy Hoodie" class="w-full h-full object-cover">
-                    <div class="absolute top-2 left-2 bg-black text-white text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Bestseller</div>
-                    <button class="absolute top-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md">
-                        <i class="far fa-heart text-xs text-gray-800"></i>
-                    </button>
-                    <div class="absolute bottom-2 left-2 right-2">
-                        <!-- GYORS KOSÁR GOMB (Működik) -->
-                        <button onclick="addToCart({id: 1, name: 'Heavy Hoodie', price: 399, variant: 'Black / Grey', img: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'})" 
-                                class="w-full bg-black text-white py-3 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-lg active:scale-95">Gyors Kosár</button>
-                    </div>
-                </div>
-                <p class="text-[9px] text-gray-500 uppercase tracking-widest mt-1">Oversized</p>
-                <h4 class="text-sm font-bold leading-tight">Heavy Hoodie</h4>
-                <div class="flex justify-between items-center mt-1">
-                    <p class="text-[11px] text-gray-500">Black / Grey</p>
-                    <p class="text-sm font-bold">399 RON</p>
-                </div>
-            </div>
-
-            <!-- Termék 2 -->
-            <div class="relative flex flex-col group">
-                <div class="relative bg-gray-200 aspect-[3/4] rounded-xl overflow-hidden mb-2">
-                    <img src="https://images.unsplash.com/photo-1572495641004-28421ae52e52?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Panel Hoodie" class="w-full h-full object-cover">
-                    <button class="absolute top-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md">
-                        <i class="far fa-heart text-xs text-gray-800"></i>
-                    </button>
-                    <div class="absolute bottom-2 left-2 right-2">
-                        <button onclick="addToCart({id: 2, name: 'Panel Hoodie', price: 429, variant: 'Bone', img: 'https://images.unsplash.com/photo-1572495641004-28421ae52e52?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'})" 
-                                class="w-full bg-black text-white py-3 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-lg active:scale-95">Gyors Kosár</button>
-                    </div>
-                </div>
-                <p class="text-[9px] text-gray-500 uppercase tracking-widest mt-1">Oversized</p>
-                <h4 class="text-sm font-bold leading-tight">Panel Hoodie</h4>
-                <div class="flex justify-between items-center mt-1">
-                    <p class="text-[11px] text-gray-500">Bone</p>
-                    <p class="text-sm font-bold">429 RON</p>
-                </div>
-            </div>
-
-            <!-- Termék 3 -->
-            <div class="relative flex flex-col group">
-                <div class="relative bg-gray-200 aspect-[3/4] rounded-xl overflow-hidden mb-2">
-                    <img src="https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Wide Pants" class="w-full h-full object-cover">
-                    <div class="absolute top-2 left-2 bg-black text-white text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Új</div>
-                    <button class="absolute top-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md">
-                        <i class="far fa-heart text-xs text-gray-800"></i>
-                    </button>
-                    <div class="absolute bottom-2 left-2 right-2">
-                        <button onclick="addToCart({id: 3, name: 'Wide Pants', price: 349, variant: 'Black', img: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'})" 
-                                class="w-full bg-black text-white py-3 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-lg active:scale-95">Gyors Kosár</button>
-                    </div>
-                </div>
-                <p class="text-[9px] text-gray-500 uppercase tracking-widest mt-1">Wide Leg</p>
-                <h4 class="text-sm font-bold leading-tight">Wide Pants</h4>
-                <div class="flex justify-between items-center mt-1">
-                    <p class="text-[11px] text-gray-500">Black</p>
-                    <p class="text-sm font-bold">349 RON</p>
-                </div>
-            </div>
-
-            <!-- Termék 4 -->
-            <div class="relative flex flex-col group">
-                <div class="relative bg-gray-200 aspect-[3/4] rounded-xl overflow-hidden mb-2">
-                    <img src="https://images.unsplash.com/photo-1584865288642-42078afe6942?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Tech Pants" class="w-full h-full object-cover">
-                    <button class="absolute top-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md">
-                        <i class="far fa-heart text-xs text-gray-800"></i>
-                    </button>
-                    <div class="absolute bottom-2 left-2 right-2">
-                        <button onclick="addToCart({id: 4, name: 'Tech Pants', price: 379, variant: 'Grey', img: 'https://images.unsplash.com/photo-1584865288642-42078afe6942?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'})" 
-                                class="w-full bg-black text-white py-3 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition shadow-lg active:scale-95">Gyors Kosár</button>
-                    </div>
-                </div>
-                <p class="text-[9px] text-gray-500 uppercase tracking-widest mt-1">Tapered</p>
-                <h4 class="text-sm font-bold leading-tight">Tech Pants</h4>
-                <div class="flex justify-between items-center mt-1">
-                    <p class="text-[11px] text-gray-500">Grey</p>
-                    <p class="text-sm font-bold">379 RON</p>
-                </div>
-            </div>
-
+        <div id="product-grid" class="grid grid-cols-2 gap-x-3 gap-y-6">
+            <!-- A termékeket a JS rendereli -->
         </div>
     </section>
 
-    <!-- Hírlevél Szekció (4. Kép alapján) -->
+    <!-- Hírlevél -->
     <section class="p-4 py-10">
         <div class="bg-[#f2efe9] rounded-2xl p-6 text-center shadow-sm">
             <p class="text-[10px] uppercase tracking-[0.2em] font-semibold text-gray-500 mb-2">Newsletter</p>
             <h3 class="text-2xl font-extrabold uppercase tracking-tight mb-6">-10% Az első rendelésre</h3>
             <form class="flex gap-2" onsubmit="event.preventDefault(); alert('Sikeres feliratkozás!');">
                 <input type="email" placeholder="E-mail cím" required class="w-full rounded-full px-5 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-black">
-                <button type="submit" class="bg-black text-white px-6 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gray-800 transition">Küldés</button>
+                <button type="submit" class="bg-black text-white px-6 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest">Küldés</button>
             </form>
         </div>
     </section>
 
-    <!-- Lábléc (3. Kép alapján) -->
+    <!-- Lábléc -->
     <footer class="bg-[#1a1a1a] text-white p-8 pb-12 rounded-t-3xl">
         <div class="mb-8">
-            <!-- Logó Szövegesen -->
-            <h2 class="text-2xl font-bold tracking-[0.2em] uppercase mb-8">Veress</h2>
+            <h2 class="text-2xl font-bold tracking-[0.2em] uppercase mb-8">VERESS STREETWEAR</h2>
         </div>
-        
         <div class="grid grid-cols-2 gap-8 mb-10 text-sm">
             <div>
                 <h4 class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Shop</h4>
                 <ul class="flex flex-col gap-3 font-light">
-                    <li><a href="#" class="hover:text-gray-300">T-Shirts</a></li>
-                    <li><a href="#" class="hover:text-gray-300">Hoodies</a></li>
-                    <li><a href="#" class="hover:text-gray-300">Shorts</a></li>
-                    <li><a href="#" class="hover:text-gray-300">Long Pants</a></li>
-                    <li><a href="#" class="hover:text-gray-300">Accessories</a></li>
-                    <li><a href="#" class="hover:text-gray-300">Outfits</a></li>
+                    <li><a href="#products">Újdonságok</a></li>
+                    <li><a href="#">T-Shirts</a></li>
+                    <li><a href="#">Hoodies</a></li>
+                    <li><a href="#">Pants</a></li>
                 </ul>
             </div>
             <div>
                 <h4 class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Help</h4>
                 <ul class="flex flex-col gap-3 font-light">
-                    <li><a href="#" class="hover:text-gray-300">Kapcsolat</a></li>
-                    <li><a href="#" class="hover:text-gray-300">Szállítás</a></li>
-                    <li><a href="#" class="hover:text-gray-300">Visszaküldés</a></li>
-                    <li><a href="#" class="hover:text-gray-300">Mérettáblázat</a></li>
-                    <li><a href="#" class="hover:text-gray-300">GYIK</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Company</h4>
-                <ul class="flex flex-col gap-3 font-light">
-                    <li><a href="#" class="hover:text-gray-300">Rólunk</a></li>
-                    <li><a href="#" class="hover:text-gray-300">Adatvédelem</a></li>
-                    <li><a href="#" class="hover:text-gray-300">ÁSZF</a></li>
-                    <li><a href="#" class="hover:text-gray-300">Cookie-k</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Social</h4>
-                <ul class="flex flex-col gap-3 font-light">
-                    <li><a href="#" class="hover:text-gray-300">Instagram</a></li>
-                    <li><a href="#" class="hover:text-gray-300">TikTok</a></li>
+                    <li><a href="#">Kapcsolat</a></li>
+                    <li><a href="#">Szállítás</a></li>
+                    <li><a href="#">Visszaküldés</a></li>
                 </ul>
             </div>
         </div>
-        
         <div class="border-t border-gray-800 pt-6 text-[9px] text-gray-500 uppercase tracking-widest">
             &copy; 2026 VERESS STREETWEAR. ALL RIGHTS RESERVED.
         </div>
     </footer>
 
-    <!-- JavaScript a funkciókhoz (Menü, Kosár, stb.) -->
+    <!-- JavaScript a funkciókhoz -->
     <script>
-        // --- MENÜ KEZELÉS ---
-        const sideMenu = document.getElementById('side-menu');
-        const menuPanel = document.getElementById('menu-panel');
-
-        function toggleMenu() {
-            if (sideMenu.classList.contains('hidden')) {
-                sideMenu.classList.remove('hidden');
-                // Kis késleltetés az animációhoz
-                setTimeout(() => menuPanel.classList.add('open'), 10);
-                document.body.style.overflow = 'hidden'; // Háttér görgetés letiltása
-            } else {
-                menuPanel.classList.remove('open');
-                setTimeout(() => {
-                    sideMenu.classList.add('hidden');
-                    document.body.style.overflow = '';
-                }, 300); // Várja meg az animáció végét
+        // --- TERMÉK ADATBÁZIS (3 képpel és 6 mérettel) ---
+        const productsDB = [
+            {
+                id: 1,
+                name: 'Heavy Hoodie',
+                price: 399,
+                variant: 'Black / Grey',
+                category: 'Oversized',
+                badge: 'Bestseller',
+                images: [
+                    'https://images.unsplash.com/photo-1556821840-3a63f95609a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1556821832-78a0b01c3857?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1556821844-3151f1580521?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'
+                ],
+                sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+            },
+            {
+                id: 2,
+                name: 'Panel Hoodie',
+                price: 429,
+                variant: 'Bone',
+                category: 'Oversized',
+                badge: '',
+                images: [
+                    'https://images.unsplash.com/photo-1572495641004-28421ae52e52?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'
+                ],
+                sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+            },
+            {
+                id: 3,
+                name: 'Wide Pants',
+                price: 349,
+                variant: 'Black',
+                category: 'Wide Leg',
+                badge: 'Új',
+                images: [
+                    'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1584865288642-42078afe6942?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1604176354204-9268737828e4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'
+                ],
+                sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+            },
+            {
+                id: 4,
+                name: 'Tech Pants',
+                price: 379,
+                variant: 'Grey',
+                category: 'Tapered',
+                badge: '',
+                images: [
+                    'https://images.unsplash.com/photo-1584865288642-42078afe6942?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
+                    'https://images.unsplash.com/photo-1604176354204-9268737828e4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'
+                ],
+                sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
             }
+        ];
+
+        // --- FŐOLDALI TERMÉKEK RENDERELÉSE ---
+        const productGrid = document.getElementById('product-grid');
+        productsDB.forEach(product => {
+            const badgeHTML = product.badge ? `<div class="absolute top-2 left-2 bg-black text-white text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">${product.badge}</div>` : '';
+            
+            productGrid.innerHTML += `
+                <div class="relative flex flex-col group cursor-pointer" onclick="openProductModal(${product.id})">
+                    <div class="relative bg-gray-200 aspect-[3/4] rounded-xl overflow-hidden mb-2">
+                        <img src="${product.images[0]}" class="w-full h-full object-cover">
+                        ${badgeHTML}
+                        <button class="absolute top-2 right-2 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md z-10" onclick="event.stopPropagation(); alert('Kedvencekhez adva!')">
+                            <i class="far fa-heart text-xs text-gray-800"></i>
+                        </button>
+                    </div>
+                    <p class="text-[9px] text-gray-500 uppercase tracking-widest mt-1">${product.category}</p>
+                    <h4 class="text-sm font-bold leading-tight">${product.name}</h4>
+                    <div class="flex justify-between items-center mt-1">
+                        <p class="text-[11px] text-gray-500">${product.variant}</p>
+                        <p class="text-sm font-bold">${product.price} RON</p>
+                    </div>
+                </div>
+            `;
+        });
+
+        // --- MENÜ ---
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            const panel = document.getElementById('menu-panel');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                setTimeout(() => panel.classList.add('open'), 10);
+                document.body.style.overflow = 'hidden';
+            } else {
+                panel.classList.remove('open');
+                setTimeout(() => { menu.classList.add('hidden'); document.body.style.overflow = ''; }, 300);
+            }
+        }
+
+        // --- TERMÉK MODAL ÉS MÉRETVÁLASZTÁS ---
+        const modal = document.getElementById('product-modal');
+        let currentActiveProduct = null;
+        let selectedSize = null;
+
+        function openProductModal(id) {
+            currentActiveProduct = productsDB.find(p => p.id === id);
+            selectedSize = null; // Reset size
+            document.getElementById('size-error').classList.add('hidden');
+
+            // Adatok betöltése
+            document.getElementById('modal-main-img').src = currentActiveProduct.images[0];
+            document.getElementById('modal-name').innerText = currentActiveProduct.name;
+            document.getElementById('modal-price').innerText = currentActiveProduct.price + ' RON';
+            document.getElementById('modal-category').innerText = currentActiveProduct.category + ' · ' + currentActiveProduct.variant;
+
+            // 3 Kép generálása
+            const thumbnailsContainer = document.getElementById('modal-thumbnails');
+            thumbnailsContainer.innerHTML = '';
+            currentActiveProduct.images.forEach(imgSrc => {
+                thumbnailsContainer.innerHTML += `
+                    <div class="w-1/3 aspect-[3/4] rounded-lg overflow-hidden cursor-pointer border border-transparent hover:border-black transition" onclick="changeModalImage('${imgSrc}')">
+                        <img src="${imgSrc}" class="w-full h-full object-cover">
+                    </div>
+                `;
+            });
+
+            // 6 Méret generálása
+            const sizesContainer = document.getElementById('modal-sizes');
+            sizesContainer.innerHTML = '';
+            currentActiveProduct.sizes.forEach(size => {
+                sizesContainer.innerHTML += `
+                    <button onclick="selectSize('${size}', this)" class="size-btn py-3 border border-gray-300 rounded-lg text-xs font-bold uppercase transition hover:border-black">
+                        ${size}
+                    </button>
+                `;
+            });
+
+            // Modal megjelenítése
+            modal.classList.remove('hidden');
+            modal.classList.add('slide-up');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeProductModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('slide-up');
+            document.body.style.overflow = ''; // Scroll visszaállítása, ha a kosár nincs nyitva
+        }
+
+        function changeModalImage(src) {
+            document.getElementById('modal-main-img').src = src;
+        }
+
+        function selectSize(size, buttonElement) {
+            selectedSize = size;
+            document.getElementById('size-error').classList.add('hidden');
+            
+            // Gombok stílusának frissítése
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.classList.remove('bg-black', 'text-white', 'border-black');
+                btn.classList.add('border-gray-300', 'text-black', 'bg-white');
+            });
+            buttonElement.classList.remove('border-gray-300', 'bg-white', 'text-black');
+            buttonElement.classList.add('bg-black', 'text-white', 'border-black');
         }
 
         // --- KOSÁR RENDSZER ---
-        const cartMenu = document.getElementById('cart-menu');
-        const cartPanel = document.getElementById('cart-panel');
-        const cartItemsContainer = document.getElementById('cart-items');
-        const cartTotalEl = document.getElementById('cart-total');
-        const cartCountEl = document.getElementById('cart-count');
-        const emptyMsg = document.getElementById('empty-cart-msg');
-        
-        let cart = []; // Itt tároljuk a kosár tartalmát
+        let cart = [];
 
         function toggleCart() {
-            if (cartMenu.classList.contains('hidden')) {
-                cartMenu.classList.remove('hidden');
-                setTimeout(() => cartPanel.classList.add('open'), 10);
+            const cMenu = document.getElementById('cart-menu');
+            const cPanel = document.getElementById('cart-panel');
+            if (cMenu.classList.contains('hidden')) {
+                cMenu.classList.remove('hidden');
+                setTimeout(() => cPanel.classList.add('open'), 10);
                 document.body.style.overflow = 'hidden';
             } else {
-                cartPanel.classList.remove('open');
-                setTimeout(() => {
-                    cartMenu.classList.add('hidden');
-                    document.body.style.overflow = '';
-                }, 300);
+                cPanel.classList.remove('open');
+                setTimeout(() => { cMenu.classList.add('hidden'); if(modal.classList.contains('hidden')) document.body.style.overflow = ''; }, 300);
             }
         }
 
-        function addToCart(product) {
-            // Ellenőrizzük, hogy benne van-e már
-            const existingItem = cart.find(item => item.id === product.id);
+        function addCurrentProductToCart() {
+            if (!selectedSize) {
+                document.getElementById('size-error').classList.remove('hidden');
+                return;
+            }
+
+            // Keresés a kosárban ID ÉS MÉRET alapján
+            const cartItemId = currentActiveProduct.id + '-' + selectedSize;
+            const existingItem = cart.find(item => item.cartId === cartItemId);
+            
             if (existingItem) {
                 existingItem.quantity += 1;
             } else {
-                cart.push({ ...product, quantity: 1 });
+                cart.push({ 
+                    ...currentActiveProduct, 
+                    cartId: cartItemId,
+                    selectedSize: selectedSize, 
+                    quantity: 1 
+                });
             }
             
             updateCartUI();
-            toggleCart(); // Gombnyomásra nyíljon ki a kosár
+            closeProductModal();
+            toggleCart(); // Kinyílik a kosár
         }
 
-        function removeFromCart(id) {
-            cart = cart.filter(item => item.id !== id);
+        function removeFromCart(cartId) {
+            cart = cart.filter(item => item.cartId !== cartId);
             updateCartUI();
         }
 
         function updateCartUI() {
-            cartItemsContainer.innerHTML = '';
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
             let total = 0;
             let count = 0;
 
             if (cart.length === 0) {
-                cartItemsContainer.appendChild(emptyMsg);
-                emptyMsg.style.display = 'block';
+                container.innerHTML = '<p class="text-center text-gray-500 text-sm mt-10">A kosarad jelenleg üres.</p>';
             } else {
-                emptyMsg.style.display = 'none';
-                
                 cart.forEach(item => {
                     total += item.price * item.quantity;
                     count += item.quantity;
 
-                    const itemEl = document.createElement('div');
-                    itemEl.className = 'flex gap-4 items-center bg-white p-2 rounded-lg border border-gray-100 shadow-sm';
-                    itemEl.innerHTML = `
-                        <img src="${item.img}" class="w-16 h-20 object-cover rounded-md bg-gray-100">
-                        <div class="flex-grow">
-                            <h4 class="text-sm font-bold">${item.name}</h4>
-                            <p class="text-[10px] text-gray-500 uppercase">${item.variant}</p>
-                            <p class="text-sm font-bold mt-1">${item.price} RON <span class="text-xs font-normal text-gray-400">x ${item.quantity}</span></p>
+                    // A kosár elem is kattintható, hogy megnyissa az adatlapot (kivéve a törlés gomb)
+                    container.innerHTML += `
+                        <div class="flex gap-4 items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm cursor-pointer hover:border-gray-300 transition" onclick="openProductModal(${item.id})">
+                            <img src="${item.images[0]}" class="w-16 h-20 object-cover rounded-md bg-gray-100">
+                            <div class="flex-grow">
+                                <h4 class="text-sm font-bold leading-tight">${item.name}</h4>
+                                <p class="text-[10px] text-gray-500 uppercase mt-0.5">Méret: <span class="font-bold text-black">${item.selectedSize}</span></p>
+                                <p class="text-sm font-bold mt-1">${item.price} RON <span class="text-xs font-normal text-gray-400">x ${item.quantity}</span></p>
+                            </div>
+                            <button onclick="event.stopPropagation(); removeFromCart('${item.cartId}')" class="text-gray-300 hover:text-red-500 p-2">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
                         </div>
-                        <button onclick="removeFromCart(${item.id})" class="text-gray-400 hover:text-red-500 p-2">
-                            <i class="fas fa-trash text-sm"></i>
-                        </button>
                     `;
-                    cartItemsContainer.appendChild(itemEl);
                 });
             }
 
-            // Összeg és számláló frissítése
-            cartTotalEl.innerText = `${total} RON`;
+            document.getElementById('cart-total').innerText = `${total} RON`;
             
+            const countEl = document.getElementById('cart-count');
             if (count > 0) {
-                cartCountEl.innerText = count;
-                cartCountEl.classList.remove('hidden');
+                countEl.innerText = count;
+                countEl.classList.remove('hidden');
             } else {
-                cartCountEl.classList.add('hidden');
+                countEl.classList.add('hidden');
             }
         }
 
         function checkout() {
-            if (cart.length === 0) {
-                alert('A kosarad üres!');
-            } else {
-                alert(`Továbbítás a fizetési oldalra... Fizetendő: ${cartTotalEl.innerText}`);
-            }
+            if (cart.length === 0) alert('A kosarad üres!');
+            else alert('Továbbítás a fizetéshez...');
         }
     </script>
 </body>
