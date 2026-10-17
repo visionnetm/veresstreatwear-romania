@@ -245,7 +245,7 @@
     </footer>
 
     <script>
-        // EmailJS Inicializálás az megadott Public Key-vel
+        // EmailJS Inicializálás (Beillesztve: Public Key)
         (function() {
             if (typeof emailjs !== 'undefined') {
                 emailjs.init("2e5cEB9trS3FV32TG");
@@ -254,6 +254,7 @@
 
         let stripe = null;
         if (typeof Stripe !== 'undefined') {
+            // Beillesztve: A te Stripe Test Publishable Key-det
             stripe = Stripe('pk_test_51UAUJLGaAig3IwqQz7GcfRad3wARRtSCVqUqV2cdnBghfh24brD6cKoDkpiIfkUNCIotqAURr4EFE0XpzMFiI5QZ00RUNmdZIn'); 
         }
 
@@ -581,7 +582,7 @@
                         total_price: totalAmount
                     };
 
-                    // EmailJS küldés a megadott Service ID ('service_lyxrur9') és Template ID ('template_c79jind') segítségével
+                    // EmailJS küldés a saját Service ID ('service_lyxrur9') és Template ID ('template_c79jind') segítségével
                     if (typeof emailjs !== 'undefined') {
                         emailjs.send('service_lyxrur9', 'template_c79jind', templateParams)
                             .then(function(response) {
