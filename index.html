@@ -245,7 +245,7 @@
     </footer>
 
     <script>
-        // EmailJS Inicializálás (Beillesztve: Public Key)
+        // EmailJS Inicializálás (Public Key: 2e5cEB9trS3FV32TG)
         (function() {
             if (typeof emailjs !== 'undefined') {
                 emailjs.init("2e5cEB9trS3FV32TG");
@@ -254,7 +254,7 @@
 
         let stripe = null;
         if (typeof Stripe !== 'undefined') {
-            // Beillesztve: A te Stripe Test Publishable Key-det
+            // Stripe Test Publishable Key
             stripe = Stripe('pk_test_51UAUJLGaAig3IwqQz7GcfRad3wARRtSCVqUqV2cdnBghfh24brD6cKoDkpiIfkUNCIotqAURr4EFE0XpzMFiI5QZ00RUNmdZIn'); 
         }
 
@@ -582,9 +582,9 @@
                         total_price: totalAmount
                     };
 
-                    // EmailJS küldés a saját Service ID ('service_lyxrur9') és Template ID ('template_c79jind') segítségével
+                    // EmailJS küldés az új Service ID-vel ('service_b2su694') és a Template ID-val ('template_c79jind')
                     if (typeof emailjs !== 'undefined') {
-                        emailjs.send('service_lyxrur9', 'template_c79jind', templateParams)
+                        emailjs.send('service_b2su694', 'template_c79jind', templateParams)
                             .then(function(response) {
                                 alert('Sikeres Stripe fizetés! A rendelés visszaigazolását elküldtük az email címedre.');
                                 cart = [];
