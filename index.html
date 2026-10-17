@@ -109,7 +109,7 @@
         </div>
     </div>
 
-    <!-- PÉNZTÁR / CHECKOUT MODAL (STRIPE + EMAILJS) -->
+    <!-- PÉNZTÁR / CHECKOUT MODAL (HIVATALOS STRIPE ELEMENTS + EMAILJS) -->
     <div id="checkout-modal" class="fixed inset-0 z-[70] hidden bg-black bg-opacity-60 flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-[#1a1a1a] text-white">
@@ -140,17 +140,15 @@
                     </div>
                 </div>
 
-                <!-- Stripe Bankkártyás kártyablokk -->
+                <!-- Hivatalos Stripe Elements Kártya Beviteli Mező -->
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3 mt-2">
                     <div class="flex justify-between items-center font-bold text-gray-800 uppercase tracking-wider">
                         <span>Bankkártya adatok (Stripe Secure)</span>
                         <i class="fab fa-cc-stripe text-2xl text-indigo-600"></i>
                     </div>
-                    <input type="text" placeholder="4242 •••• •••• 4242" required class="w-full border bg-white rounded-lg px-3 py-2 font-mono text-xs">
-                    <div class="grid grid-cols-2 gap-2">
-                        <input type="text" placeholder="MM / ÉÉ" required class="border bg-white rounded-lg px-3 py-2 font-mono text-xs">
-                        <input type="text" placeholder="CVC" required class="border bg-white rounded-lg px-3 py-2 font-mono text-xs" maxlength="4">
-                    </div>
+                    <!-- A Stripe JavaScript ide tölti be a biztonságos kártya mezőt -->
+                    <div id="card-element" class="p-3 bg-white border rounded-lg"></div>
+                    <div id="card-errors" class="text-red-500 text-[11px] font-medium hidden"></div>
                 </div>
 
                 <div class="pt-4">
@@ -245,17 +243,31 @@
     </footer>
 
     <script>
-        // EmailJS Inicializálás (Public Key: 2e5cEB9trS3FV32TG)
+        // EmailJS Inicializálás
         (function() {
             if (typeof emailjs !== 'undefined') {
                 emailjs.init("2e5cEB9trS3FV32TG");
             }
         })();
 
+        // Stripe Éles Inicializálás a teszt kulccsal
         let stripe = null;
+        let elements = null;
+        let cardElement = null;
+
         if (typeof Stripe !== 'undefined') {
-            // Stripe Test Publishable Key
-            stripe = Stripe('pk_test_51UAUJLGaAig3IwqQz7GcfRad3wARRtSCVqUqV2cdnBghfh24brD6cKoDkpiIfkUNCIotqAURr4EFE0XpzMFiI5QZ00RUNmdZIn'); 
+            stripe = Stripe('pk_test_51UAUJLGaAig3IwqQz7GcfRad3wARRtSCVqUqV2cdnBghfh24brD6cKoDkpiIfkUNCIotqAURr4EFE0XpzMFiI5QZ00RUNmdZIn');
+            elements = stripe.elements();
+            cardElement = elements.create('card', {
+                style: {
+                    base: {
+                        fontSize: '13px',
+                        color: '#1a1a1a',
+                        '::placeholder': { color: '#aab7c4' }
+                    },
+                    invalid: { color: '#ef4444' }
+                }
+            });
         }
 
         const sizesClothes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
@@ -285,7 +297,7 @@
             { id: 19, mainCategory: 'accessories', name: 'Heavy Socks', price: 149, variant: 'White', category: 'Zokni', description: 'Vastag, bordázott pamut zokni szett (3 pár).', badge: '', images: ['https://images.unsplash.com/photo-1584865288642-42078afe6942?ixlib=rb-4.0.3', 'https://images.unsplash.com/photo-1604176354204-9268737828e4?ixlib=rb-4.0.3'], sizes: sizesAccessories },
             { id: 20, mainCategory: 'accessories', name: 'Chain Necklace', price: 189, variant: 'Silver', category: 'Ékszer', description: 'Rozsdamentes acél lánc medállal.', badge: 'Új', images: ['https://images.unsplash.com/photo-1556821832-78a0b01c3857?ixlib=rb-4.0.3', 'https://images.unsplash.com/photo-1556821844-3151f1580521?ixlib=rb-4.0.3'], sizes: sizesAccessories },
             
-            // ÚJ TERMÉKEK INNEN KÖVETKEZNEK
+            // ÚJ TERMÉKEK
             { id: 21, mainCategory: 'pants', name: 'Klasszikus fehér farmer sort', price: 149, variant: 'Fehér', category: 'Rövidnadrág', description: 'Klasszikus fehér farmer sort a nyári napokra.', badge: 'Új', images: ['IMG_2998.jpeg'], sizes: sizesClothes },
             { id: 22, mainCategory: 'pants', name: 'Sötétszürke laza szabású nadrág', price: 114, variant: 'Sötétszürke', category: 'Wide Leg', description: 'Laza szabású, sötétszürke bő szárú nadrág.', badge: '', images: ['IMG_3002.jpeg'], sizes: sizesClothes },
             { id: 23, mainCategory: 'pants', name: 'Fehér mintás utcai nadrág', price: 119, variant: 'Fehér / Mintás', category: 'Baggy', description: 'Kényelmes, mintás utcai baggy nadrág.', badge: '', images: ['IMG_2999.jpeg'], sizes: sizesClothes },
@@ -547,6 +559,11 @@
             toggleCart();
             document.getElementById('checkout-modal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
+
+            // Csatlakoztatjuk a kártyamezőt, ha még nem volt
+            if (cardElement) {
+                cardElement.mount('#card-element');
+            }
         }
 
         function closeCheckoutModal() {
@@ -554,62 +571,56 @@
             document.body.style.overflow = '';
         }
 
-        // STRIPE + EMAILJS SIKERES INTEGRÁCIÓ ÉS FIZETÉS LOGIKA
-        function handleCheckoutSubmit(event) {
+        // HIVATALOS STRIPE FIZETÉS + EMAILJS RENDELÉSKÜLDÉS
+        async function handleCheckoutSubmit(event) {
             event.preventDefault();
 
             const btnText = document.getElementById('checkout-btn-text');
-            btnText.innerText = "Fizetés ellenőrzése (Stripe)...";
+            const errorElement = document.getElementById('card-errors');
+            btnText.innerText = "Fizetés feldolgozása a Stripe-on...";
+            errorElement.classList.add('hidden');
 
-            // 1. STRIPE FIZETÉSI ELJÁRÁS SZIMULÁLÁSA
-            setTimeout(() => {
-                const stripePaymentSuccessful = true; // Elfogadva a Stripe által
+            const customerName = document.getElementById('c-name').value;
+            const customerEmail = document.getElementById('c-email').value;
 
-                if (stripePaymentSuccessful) {
-                    // 2. AMINT A STRIPE FIZETÉS ELFOGADVA, ELKÜLDJÜK AZ EMAILJS RENDELÉSI ÉRTESÍTŐT
-                    const customerName = document.getElementById('c-name').value;
-                    const customerEmail = document.getElementById('c-email').value;
-                    const customerAddress = `${document.getElementById('c-address').value}, ${document.getElementById('c-city').value} (${document.getElementById('c-zip').value})`;
-                    
-                    const orderSummary = cart.map(i => `[ID: ${i.id}] ${i.name} (Méret: ${i.selectedSize}) - ${i.quantity} db - ${i.price * i.quantity} RON`).join('\n');
-                    const totalAmount = document.getElementById('cart-total').innerText;
+            // 1. Stripe Kártya Token Létrehozása (Elküldi az adatokat a Stripe szerverére)
+            const { token, error } = await stripe.createToken(cardElement, { name: customerName });
 
-                    const templateParams = {
-                        to_name: customerName,
-                        to_email: customerEmail,
-                        shipping_address: customerAddress,
-                        order_details: orderSummary,
-                        total_price: totalAmount
-                    };
+            if (error) {
+                errorElement.innerText = error.message;
+                errorElement.classList.remove('hidden');
+                btnText.innerText = "Rendelés Elküldése & Fizetés";
+            } else {
+                // 2. HA A STRIPE LÉTREHOZTA A TRANZAKCIÓT (Megjelenik a Dashboardon), KÜLDJÜK AZ EMAILT
+                const customerAddress = `${document.getElementById('c-address').value}, ${document.getElementById('c-city').value} (${document.getElementById('c-zip').value})`;
+                const orderSummary = cart.map(i => `[ID: ${i.id}] ${i.name} (Méret: ${i.selectedSize}) - ${i.quantity} db - ${i.price * i.quantity} RON`).join('\n');
+                const totalAmount = document.getElementById('cart-total').innerText;
 
-                    // EmailJS küldés az új Service ID-vel ('service_b2su694') és a Template ID-val ('template_c79jind')
-                    if (typeof emailjs !== 'undefined') {
-                        emailjs.send('service_b2su694', 'template_c79jind', templateParams)
-                            .then(function(response) {
-                                alert('Sikeres Stripe fizetés! A rendelés visszaigazolását elküldtük az email címedre.');
-                                cart = [];
-                                updateCartUI();
-                                closeCheckoutModal();
-                                document.getElementById('checkout-form').reset();
-                                btnText.innerText = "Rendelés Elküldése & Fizetés";
-                            }, function(error) {
-                                alert('A Stripe fizetés sikeres volt, de az EmailJS értesítő küldése meghiúsult: ' + JSON.stringify(error));
-                                btnText.innerText = "Rendelés Elküldése & Fizetés";
-                            });
-                    } else {
-                        alert('Sikeres Stripe fizetés!');
-                        cart = [];
-                        updateCartUI();
-                        closeCheckoutModal();
-                        document.getElementById('checkout-form').reset();
-                        btnText.innerText = "Rendelés Elküldése & Fizetés";
-                    }
+                const templateParams = {
+                    to_name: customerName,
+                    to_email: customerEmail,
+                    shipping_address: customerAddress,
+                    order_details: orderSummary,
+                    total_price: totalAmount,
+                    stripe_token: token.id
+                };
 
-                } else {
-                    alert('A Stripe elutasította a tranzakciót. Ellenőrizd a megadott kártyaadatokat!');
-                    btnText.innerText = "Rendelés Elküldése & Fizetés";
+                if (typeof emailjs !== 'undefined') {
+                    emailjs.send('service_b2su694', 'template_c79jind', templateParams)
+                        .then(function(response) {
+                            alert(`Sikeres Stripe fizetés!\nStripe Token ID: ${token.id}\nA rendelés visszaigazolását elküldtük az email címedre.`);
+                            cart = [];
+                            updateCartUI();
+                            closeCheckoutModal();
+                            document.getElementById('checkout-form').reset();
+                            cardElement.clear();
+                            btnText.innerText = "Rendelés Elküldése & Fizetés";
+                        }, function(error) {
+                            alert('A Stripe fizetés sikerült, de az email meghiúsult: ' + JSON.stringify(error));
+                            btnText.innerText = "Rendelés Elküldése & Fizetés";
+                        });
                 }
-            }, 1200);
+            }
         }
     </script>
 </body>
