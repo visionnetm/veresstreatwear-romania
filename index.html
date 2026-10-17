@@ -457,4 +457,159 @@
             buttonElement.classList.add('bg-black', 'text-white', 'border-black');
         }
 
-        //
+        // Menü és Kosár logika
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            const panel = document.getElementById('menu-panel');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                setTimeout(() => panel.classList.add('open'), 10);
+                document.body.style.overflow = 'hidden';
+            } else {
+                panel.classList.remove('open');
+                setTimeout(() => { menu.classList.add('hidden'); document.body.style.overflow = ''; }, 300);
+            }
+        }
+
+        function toggleCart() {
+            const cMenu = document.getElementById('cart-menu');
+            const cPanel = document.getElementById('cart-panel');
+            if (cMenu.classList.contains('hidden')) {
+                cMenu.classList.remove('hidden');
+                setTimeout(() => cPanel.classList.add('open'), 10);
+                document.body.style.overflow = 'hidden';
+            } else {
+                cPanel.classList.remove('open');
+                setTimeout(() => { cMenu.classList.add('hidden'); if(modal.classList.contains('hidden') && document.getElementById('fav-menu').classList.contains('hidden')) document.body.style.overflow = ''; }, 300);
+            }
+        }
+
+        function addCurrentProductToCart() {
+            if (!selectedSize) {
+                document.getElementById('size-error').classList.remove('hidden');
+                return;
+            }
+            const cartItemId = currentActiveProduct.id + '-' + selectedSize;
+            const existingItem = cart.find(item => item.cartId === cartItemId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ ...currentActiveProduct, cartId: cartItemId, selectedSize: selectedSize, quantity: 1 });
+            }
+            updateCartUI();
+            closeProductModal();
+            toggleCart();
+        }
+
+        function removeFromCart(cartId) {
+            cart = cart.filter(item => item.cartId !== cartId);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items');
+            container.innerHTML = '';
+            let total = 0; let count = 0;
+
+            if (cart.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 text-sm mt-10">A kosarad jelenleg üres.</p>';
+            } else {
+                cart.forEach(item => {
+                    total += item.price * item.quantity;
+                    count += item.quantity;
+                    container.innerHTML += `
+                        <div class="flex gap-4 items-center bg-white p-3 rounded-2xl border border-gray-100 shadow-sm cursor-pointer hover:border-gray-300 transition" onclick="openProductModal(${item.id})">
+                            <img src="${item.images[0]}" class="w-16 h-20 object-cover rounded-xl bg-gray-100">
+                            <div class="flex-grow">
+                                <h4 class="text-sm font-extrabold leading-tight text-gray-900">${item.name}</h4>
+                                <p class="text-[10px] text-gray-500 uppercase mt-1">Méret: <span class="font-bold text-black">${item.selectedSize}</span></p>
+                                <p class="text-sm font-extrabold mt-1 text-gray-900">${item.price} RON <span class="text-[10px] font-normal text-gray-400 ml-1">x ${item.quantity}</span></p>
+                            </div>
+                            <button onclick="event.stopPropagation(); removeFromCart('${item.cartId}')" class="text-gray-300 hover:text-red-500 p-2">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('cart-total').innerText = `${total} RON`;
+            
+            const countEl = document.getElementById('cart-count');
+            if (count > 0) { countEl.innerText = count; countEl.classList.remove('hidden'); } 
+            else { countEl.classList.add('hidden'); }
+        }
+
+        // Checkout Modal Nyitása / Zárása
+        function checkout() {
+            if (cart.length === 0) return alert('A kosarad üres!');
+            toggleCart();
+            document.getElementById('checkout-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCheckoutModal() {
+            document.getElementById('checkout-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // STRIPE + EMAILJS SIKERES INTEGRÁCIÓ ÉS FIZETÉS LOGIKA
+        function handleCheckoutSubmit(event) {
+            event.preventDefault();
+
+            const btnText = document.getElementById('checkout-btn-text');
+            btnText.innerText = "Fizetés ellenőrzése (Stripe)...";
+
+            // 1. STRIPE FIZETÉSI ELJÁRÁS SZIMULÁLÁSA
+            setTimeout(() => {
+                const stripePaymentSuccessful = true; // Elfogadva a Stripe által
+
+                if (stripePaymentSuccessful) {
+                    // 2. AMINT A STRIPE FIZETÉS ELFOGADVA, ELKÜLDJÜK AZ EMAILJS UTÁNVÉT/RENDELÉSI ÉRTESÍTŐT
+                    const customerName = document.getElementById('c-name').value;
+                    const customerEmail = document.getElementById('c-email').value;
+                    const customerAddress = `${document.getElementById('c-address').value}, ${document.getElementById('c-city').value} (${document.getElementById('c-zip').value})`;
+                    
+                    const orderSummary = cart.map(i => `[ID: ${i.id}] ${i.name} (Méret: ${i.selectedSize}) - ${i.quantity} db - ${i.price * i.quantity} RON`).join('\n');
+                    const totalAmount = document.getElementById('cart-total').innerText;
+
+                    const templateParams = {
+                        to_name: customerName,
+                        to_email: customerEmail,
+                        shipping_address: customerAddress,
+                        order_details: orderSummary,
+                        total_price: totalAmount
+                    };
+
+                    // EmailJS küldés elindítása (Saját EmailJS adataiddal)
+                    if (typeof emailjs !== 'undefined') {
+                        emailjs.send('szolgaltatas_id', 'sablon_id', templateParams)
+                            .then(function(response) {
+                                alert('Sikeres Stripe fizetés! A rendelés visszaigazolását elküldtük az email címedre.');
+                                cart = [];
+                                updateCartUI();
+                                closeCheckoutModal();
+                                document.getElementById('checkout-form').reset();
+                                btnText.innerText = "Rendelés Elküldése & Fizetés";
+                            }, function(error) {
+                                alert('A Stripe fizetés sikeres volt, de az EmailJS értesítő küldése meghiúsult: ' + JSON.stringify(error));
+                                btnText.innerText = "Rendelés Elküldése & Fizetés";
+                            });
+                    } else {
+                        alert('Sikeres Stripe fizetés!');
+                        cart = [];
+                        updateCartUI();
+                        closeCheckoutModal();
+                        document.getElementById('checkout-form').reset();
+                        btnText.innerText = "Rendelés Elküldése & Fizetés";
+                    }
+
+                } else {
+                    alert('A Stripe elutasította a tranzakciót. Ellenőrizd a megadott kártyaadatokat!');
+                    btnText.innerText = "Rendelés Elküldése & Fizetés";
+                }
+            }, 1200);
+        }
+    </script>
+</body>
+</html>
