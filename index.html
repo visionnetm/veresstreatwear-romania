@@ -245,10 +245,10 @@
     </footer>
 
     <script>
-        // EmailJS Inicializálás (Ide írhatod be a saját EmailJS Public Key-edet)
+        // EmailJS Inicializálás az megadott Public Key-vel
         (function() {
             if (typeof emailjs !== 'undefined') {
-                emailjs.init("YOUR_PUBLIC_KEY");
+                emailjs.init("2e5cEB9trS3FV32TG");
             }
         })();
 
@@ -565,7 +565,7 @@
                 const stripePaymentSuccessful = true; // Elfogadva a Stripe által
 
                 if (stripePaymentSuccessful) {
-                    // 2. AMINT A STRIPE FIZETÉS ELFOGADVA, ELKÜLDJÜK AZ EMAILJS UTÁNVÉT/RENDELÉSI ÉRTESÍTŐT
+                    // 2. AMINT A STRIPE FIZETÉS ELFOGADVA, ELKÜLDJÜK AZ EMAILJS RENDELÉSI ÉRTESÍTŐT
                     const customerName = document.getElementById('c-name').value;
                     const customerEmail = document.getElementById('c-email').value;
                     const customerAddress = `${document.getElementById('c-address').value}, ${document.getElementById('c-city').value} (${document.getElementById('c-zip').value})`;
@@ -581,9 +581,9 @@
                         total_price: totalAmount
                     };
 
-                    // EmailJS küldés elindítása (Saját EmailJS adataiddal)
+                    // EmailJS küldés a megadott Service ID ('service_lyxrur9') és Template ID ('template_c79jind') segítségével
                     if (typeof emailjs !== 'undefined') {
-                        emailjs.send('szolgaltatas_id', 'sablon_id', templateParams)
+                        emailjs.send('service_lyxrur9', 'template_c79jind', templateParams)
                             .then(function(response) {
                                 alert('Sikeres Stripe fizetés! A rendelés visszaigazolását elküldtük az email címedre.');
                                 cart = [];
