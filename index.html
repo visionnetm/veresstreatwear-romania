@@ -247,10 +247,15 @@
     <script>
         // EmailJS Inicializálás (Ide írhatod be a saját EmailJS Public Key-edet)
         (function() {
-            emailjs.init("VAGY_ITT_ADD_MEG_AZ_EMAILJS_PUBLIC_KEY_T");
+            if (typeof emailjs !== 'undefined') {
+                emailjs.init("YOUR_PUBLIC_KEY");
+            }
         })();
 
-        const stripe = Stripe('pk_test_51UAUJLGaAig3IwqQz7GcfRad3wARRtSCVqUqV2cdnBghfh24brD6cKoDkpiIfkUNCIotqAURr4EFE0XpzMFiI5QZ00RUNmdZIn'); 
+        let stripe = null;
+        if (typeof Stripe !== 'undefined') {
+            stripe = Stripe('pk_test_51UAUJLGaAig3IwqQz7GcfRad3wARRtSCVqUqV2cdnBghfh24brD6cKoDkpiIfkUNCIotqAURr4EFE0XpzMFiI5QZ00RUNmdZIn'); 
+        }
 
         const sizesClothes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
         const sizesAccessories = ['Egyméret'];
@@ -276,4 +281,180 @@
             { id: 16, mainCategory: 'hoodies', name: 'Knit Crewneck', price: 499, variant: 'Bone', category: 'Oversized', description: 'Vastag kötött pulóver az átmeneti időjáráshoz.', badge: '', images: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3', 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?ixlib=rb-4.0.3'], sizes: sizesClothes },
             { id: 17, mainCategory: 'accessories', name: 'Signature Beanie', price: 129, variant: 'Black', category: 'Fejfedő', description: 'Kötött sapka fém logó táblával.', badge: '', images: ['https://images.unsplash.com/photo-1572495641004-28421ae52e52?ixlib=rb-4.0.3', 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?ixlib=rb-4.0.3'], sizes: sizesAccessories },
             { id: 18, mainCategory: 'accessories', name: 'Crossbody Bag', price: 219, variant: 'Black', category: 'Táska', description: 'Praktikus vízlepergető válltáska.', badge: 'Bestseller', images: ['https://images.unsplash.com/photo-1604176354204-9268737828e4?ixlib=rb-4.0.3', 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?ixlib=rb-4.0.3'], sizes: sizesAccessories },
-            { id: 
+            { id: 19, mainCategory: 'accessories', name: 'Heavy Socks', price: 149, variant: 'White', category: 'Zokni', description: 'Vastag, bordázott pamut zokni szett (3 pár).', badge: '', images: ['https://images.unsplash.com/photo-1584865288642-42078afe6942?ixlib=rb-4.0.3', 'https://images.unsplash.com/photo-1604176354204-9268737828e4?ixlib=rb-4.0.3'], sizes: sizesAccessories },
+            { id: 20, mainCategory: 'accessories', name: 'Chain Necklace', price: 189, variant: 'Silver', category: 'Ékszer', description: 'Rozsdamentes acél lánc medállal.', badge: 'Új', images: ['https://images.unsplash.com/photo-1556821832-78a0b01c3857?ixlib=rb-4.0.3', 'https://images.unsplash.com/photo-1556821844-3151f1580521?ixlib=rb-4.0.3'], sizes: sizesAccessories },
+            
+            // ÚJ TERMÉKEK INNEN KÖVETKEZNEK
+            { id: 21, mainCategory: 'pants', name: 'Klasszikus fehér farmer sort', price: 149, variant: 'Fehér', category: 'Rövidnadrág', description: 'Klasszikus fehér farmer sort a nyári napokra.', badge: 'Új', images: ['IMG_2998.jpeg'], sizes: sizesClothes },
+            { id: 22, mainCategory: 'pants', name: 'Sötétszürke laza szabású nadrág', price: 114, variant: 'Sötétszürke', category: 'Wide Leg', description: 'Laza szabású, sötétszürke bő szárú nadrág.', badge: '', images: ['IMG_3002.jpeg'], sizes: sizesClothes },
+            { id: 23, mainCategory: 'pants', name: 'Fehér mintás utcai nadrág', price: 119, variant: 'Fehér / Mintás', category: 'Baggy', description: 'Kényelmes, mintás utcai baggy nadrág.', badge: '', images: ['IMG_2999.jpeg'], sizes: sizesClothes },
+            { id: 24, mainCategory: 'pants', name: 'Szürke mintás szabadidőnadrág', price: 110, variant: 'Szürke / Mintás', category: 'Melegítő', description: 'Szürke, feliratos melegítőnadrág a maximális kényelemért.', badge: '', images: ['IMG_3001.jpeg'], sizes: sizesClothes }
+        ];
+
+        let favorites = [];
+        let cart = [];
+
+        function renderAllProducts() {
+            const categories = ['outfits', 'tshirts', 'pants', 'hoodies', 'accessories'];
+            categories.forEach(cat => {
+                const gridElement = document.getElementById(`${cat}-grid`);
+                if (gridElement) {
+                    gridElement.innerHTML = '';
+                    const filteredProducts = productsDB.filter(p => p.mainCategory === cat);
+                    
+                    filteredProducts.forEach(product => {
+                        const badgeHTML = product.badge ? `<div class="absolute top-3 left-3 bg-black text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">${product.badge}</div>` : '';
+                        
+                        const isFav = favorites.includes(product.id);
+                        const heartClass = isFav ? 'fas fa-heart text-red-500' : 'far fa-heart text-gray-800';
+
+                        gridElement.innerHTML += `
+                            <div class="relative flex flex-col group cursor-pointer" onclick="openProductModal(${product.id})">
+                                <div class="relative bg-gray-200 aspect-[3/4] rounded-2xl overflow-hidden mb-3">
+                                    <img src="${product.images[0]}" class="w-full h-full object-cover">
+                                    ${badgeHTML}
+                                    <button class="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm z-10" onclick="event.stopPropagation(); toggleFavoriteStatus(${product.id})">
+                                        <i class="${heartClass} text-[13px] transition-colors"></i>
+                                    </button>
+                                </div>
+                                <p class="text-[10px] text-gray-500 uppercase tracking-widest leading-none">${product.category}</p>
+                                <h4 class="text-base font-extrabold leading-tight mt-1 text-gray-900">${product.name}</h4>
+                                <div class="flex justify-between items-end mt-1">
+                                    <p class="text-xs text-gray-500">${product.variant}</p>
+                                    <p class="text-sm font-extrabold text-gray-900">${product.price} RON</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", renderAllProducts);
+
+        // Kedvencek Kezelése
+        function toggleFavorites() {
+            const fMenu = document.getElementById('fav-menu');
+            const fPanel = document.getElementById('fav-panel');
+            if (fMenu.classList.contains('hidden')) {
+                fMenu.classList.remove('hidden');
+                setTimeout(() => fPanel.classList.add('open'), 10);
+                document.body.style.overflow = 'hidden';
+            } else {
+                fPanel.classList.remove('open');
+                setTimeout(() => { fMenu.classList.add('hidden'); if(modal.classList.contains('hidden') && document.getElementById('cart-menu').classList.contains('hidden')) document.body.style.overflow = ''; }, 300);
+            }
+        }
+
+        function toggleFavoriteStatus(id) {
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(favId => favId !== id);
+            } else {
+                favorites.push(id);
+            }
+            renderAllProducts();
+            updateFavoritesUI();
+        }
+
+        function updateFavoritesUI() {
+            const container = document.getElementById('fav-items');
+            container.innerHTML = '';
+            
+            if (favorites.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 text-sm mt-10">Nincsenek kedvenc termékeid.</p>';
+            } else {
+                favorites.forEach(favId => {
+                    const item = productsDB.find(p => p.id === favId);
+                    container.innerHTML += `
+                        <div class="flex gap-4 items-center bg-white p-3 rounded-2xl border border-gray-100 shadow-sm cursor-pointer hover:border-gray-300 transition" onclick="openProductModal(${item.id})">
+                            <img src="${item.images[0]}" class="w-16 h-20 object-cover rounded-xl bg-gray-100">
+                            <div class="flex-grow">
+                                <h4 class="text-sm font-extrabold leading-tight text-gray-900">${item.name}</h4>
+                                <p class="text-[10px] text-gray-500 mt-1">${item.variant}</p>
+                                <p class="text-sm font-extrabold mt-1 text-gray-900">${item.price} RON</p>
+                            </div>
+                            <button onclick="event.stopPropagation(); toggleFavoriteStatus(${item.id})" class="text-gray-300 hover:text-red-500 p-2">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+            }
+
+            const countEl = document.getElementById('fav-count');
+            if (favorites.length > 0) {
+                countEl.innerText = favorites.length;
+                countEl.classList.remove('hidden');
+            } else {
+                countEl.classList.add('hidden');
+            }
+        }
+
+        // Modál Kezelés
+        const modal = document.getElementById('product-modal');
+        let currentActiveProduct = null;
+        let selectedSize = null;
+
+        function openProductModal(id) {
+            currentActiveProduct = productsDB.find(p => p.id === id);
+            selectedSize = null;
+            document.getElementById('size-error').classList.add('hidden');
+
+            document.getElementById('modal-main-img').src = currentActiveProduct.images[0];
+            document.getElementById('modal-name').innerText = currentActiveProduct.name;
+            document.getElementById('modal-price').innerText = currentActiveProduct.price + ' RON';
+            document.getElementById('modal-category').innerText = currentActiveProduct.category + ' · ' + currentActiveProduct.variant;
+            document.getElementById('modal-description').innerText = currentActiveProduct.description;
+
+            const thumbnailsContainer = document.getElementById('modal-thumbnails');
+            thumbnailsContainer.innerHTML = '';
+            currentActiveProduct.images.forEach(imgSrc => {
+                thumbnailsContainer.innerHTML += `
+                    <div class="w-1/3 aspect-[3/4] rounded-lg overflow-hidden cursor-pointer border border-transparent hover:border-black transition" onclick="changeModalImage('${imgSrc}')">
+                        <img src="${imgSrc}" class="w-full h-full object-cover">
+                    </div>
+                `;
+            });
+
+            const sizesContainer = document.getElementById('modal-sizes');
+            sizesContainer.innerHTML = '';
+            const gridClass = currentActiveProduct.sizes.length === 1 ? 'grid-cols-1' : 'grid-cols-3';
+            sizesContainer.className = `grid ${gridClass} gap-2`;
+
+            currentActiveProduct.sizes.forEach(size => {
+                sizesContainer.innerHTML += `
+                    <button onclick="selectSize('${size}', this)" class="size-btn py-3.5 border border-gray-200 rounded-lg text-[11px] font-bold uppercase transition text-gray-700 hover:border-black">
+                        ${size}
+                    </button>
+                `;
+            });
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.classList.add('slide-up');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeProductModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.classList.remove('slide-up');
+            if(document.getElementById('cart-menu').classList.contains('hidden') && document.getElementById('fav-menu').classList.contains('hidden')) {
+                document.body.style.overflow = '';
+            }
+        }
+
+        function changeModalImage(src) { document.getElementById('modal-main-img').src = src; }
+
+        function selectSize(size, buttonElement) {
+            selectedSize = size;
+            document.getElementById('size-error').classList.add('hidden');
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.classList.remove('bg-black', 'text-white', 'border-black');
+                btn.classList.add('border-gray-200', 'text-gray-700', 'bg-white');
+            });
+            buttonElement.classList.remove('border-gray-200', 'bg-white', 'text-gray-700');
+            buttonElement.classList.add('bg-black', 'text-white', 'border-black');
+        }
+
+        //
