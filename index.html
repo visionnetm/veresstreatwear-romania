@@ -224,8 +224,8 @@
             }
         })();
 
-        // A Render szerverünk címe a dinamikus Stripe fizetéshez[span_3](start_span)[span_3](end_span)
-        const SERVER_CHECKOUT_URL = "https://veressstreetwear-romania.onrender.com/create-checkout-session";
+        // A pontos, helyes Render szerver URL (egy 's'-el a streetwear-ben!)
+        const SERVER_CHECKOUT_URL = "https://veresstreatwear-romania.onrender.com/create-checkout-session";
 
         const sizesClothes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
         const sizesAccessories = ['Egyméret'];
@@ -492,7 +492,7 @@
             }
 
             const btn = document.getElementById('checkout-btn');
-            btn.innerHTML = '<span>Rendelés rögzítése...</span>';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Fizetés előkészítése...</span>';
             btn.disabled = true;
 
             const orderSummary = cart.map(i => `${i.name} (Méret: ${i.selectedSize}) - ${i.quantity} db - ${i.price * i.quantity} RON`).join('\n');
@@ -519,10 +519,14 @@
                         })
                     });
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Szerver válaszolási hiba: ' + response.status);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.url) {
-                        // Sikeresen megkaptuk a Stripe dinamikus fizetési linkjét, átirányítjuk a vevőt!
                         window.location.href = data.url;
                     } else {
                         throw new Error(data.error || 'Nem érkezett fizetési link a szervertől.');
