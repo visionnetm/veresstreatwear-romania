@@ -224,8 +224,8 @@
             }
         })();
 
-        // Stripe Payment Link (A helyes, friss link)
-        const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_eVq4gz4RU2XPcpE2JK5kk00";
+        // Stripe Payment Link a 10 RON-os egységáras termékhez
+        const STRIPE_BASE_LINK = "https://buy.stripe.com/test_14AdR9acebul4Xc5VW5kk01";
 
         const sizesClothes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
         const sizesAccessories = ['Egyméret'];
@@ -441,11 +441,14 @@
             updateCartUI();
         }
 
+        let currentCartTotal = 0;
+
         function updateCartUI() {
             const container = document.getElementById('cart-items');
             const shippingSection = document.getElementById('shipping-details-section');
             container.innerHTML = '';
-            let total = 0; let count = 0;
+            currentCartTotal = 0; 
+            let count = 0;
 
             if (cart.length === 0) {
                 container.innerHTML = '<p class="text-center text-gray-500 text-sm mt-5">A kosarad jelenleg üres.</p>';
@@ -453,7 +456,7 @@
             } else {
                 shippingSection.classList.remove('hidden');
                 cart.forEach(item => {
-                    total += item.price * item.quantity;
+                    currentCartTotal += item.price * item.quantity;
                     count += item.quantity;
                     container.innerHTML += `
                         <div class="flex gap-3 items-center bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
@@ -467,13 +470,13 @@
                     `;
                 });
             }
-            document.getElementById('cart-total').innerText = `${total} RON`;
+            document.getElementById('cart-total').innerText = `${currentCartTotal} RON`;
             const countEl = document.getElementById('cart-count');
             if (count > 0) { countEl.innerText = count; countEl.classList.remove('hidden'); } 
             else { countEl.classList.add('hidden'); }
         }
 
-        // EmailJS elküldés + Átirányítás a Stripe Payment Linkre
+        // EmailJS elküldés + Dinamikus Stripe Átirányítás
         function handleStripeCheckout() {
             if (cart.length === 0) return alert('A kosarad üres!');
 
@@ -493,7 +496,7 @@
             btn.disabled = true;
 
             const orderSummary = cart.map(i => `${i.name} (Méret: ${i.selectedSize}) - ${i.quantity} db - ${i.price * i.quantity} RON`).join('\n');
-            const totalAmount = document.getElementById('cart-total').innerText;
+            const totalAmountText = `${currentCartTotal} RON`;
             const fullAddress = `${address}, ${city} (${zip})`;
 
             const templateParams = {
@@ -501,14 +504,18 @@
                 to_email: email,
                 shipping_address: fullAddress,
                 order_details: orderSummary,
-                total_price: totalAmount
+                total_price: totalAmountText
             };
+
+            // Kiszámoljuk a Stripe mennyiséget (Mivel a termék 10 RON, a végösszeget elosztjuk 10-zel)
+            const stripeQuantity = Math.round(currentCartTotal / 10);
+            const dynamicStripeLink = `${STRIPE_BASE_LINK}?quantity=${stripeQuantity}`;
 
             // 1. EmailJS küldés
             emailjs.send('service_b2su694', 'template_c79jind', templateParams)
                 .then(function(response) {
-                    // 2. Sikeres e-mail után átirányítás a Stripe fizetési oldalra
-                    window.location.href = STRIPE_PAYMENT_LINK;
+                    // 2. Sikeres e-mail után átirányítás a Stripe fizetési oldalra a pontos összeggel
+                    window.location.href = dynamicStripeLink;
                 }, function(error) {
                     alert('Hiba történt a rendelés mentésekor: ' + JSON.stringify(error));
                     btn.innerHTML = '<i class="fas fa-lock"></i><span>Tovább a fizetéshez (Stripe)</span>';
